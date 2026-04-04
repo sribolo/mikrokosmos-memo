@@ -32,11 +32,11 @@
     
       <!-- CENTER: NAV -->
       <nav class="top-nav">
-        <a href="{% url 'home' %}" class="active">Home</a>
+        <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'collection' %}">Collection</a>
         <a href="{% url 'owned' %}">Owned</a>
         <a href="{% url 'wishlist' %}">Wishlist</a>
-        <a href="{% url 'stats' %}">Stats</a>
+        <a href="{% url 'stats' %}" class="active">Stats</a>
       </nav>
     
       <!-- RIGHT: PROFILE + LIGHTSTICK -->
@@ -117,8 +117,8 @@
   <nav class="mobile-nav">
     <a href="{% url 'home' %}">Home</a>
     <a href="{% url 'collection' %}">Collection</a>
-    <a href="{% url 'wishlist' %}">Wishlist</a>
     <a href="{% url 'owned' %}">Owned</a>
+    <a href="{% url 'wishlist' %}">Wishlist</a>
     <a href="{% url 'stats' %}" class="active">Stats</a>
   </nav>
   

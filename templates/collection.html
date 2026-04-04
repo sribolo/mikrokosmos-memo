@@ -32,8 +32,8 @@
     
       <!-- CENTER: NAV -->
       <nav class="top-nav">
-        <a href="{% url 'home' %}" class="active">Home</a>
-        <a href="{% url 'collection' %}">Collection</a>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'collection' %}" class="active">Collection</a>
         <a href="{% url 'owned' %}">Owned</a>
         <a href="{% url 'wishlist' %}">Wishlist</a>
         <a href="{% url 'stats' %}">Stats</a>
@@ -153,10 +153,6 @@
     <a href="{% url 'owned' %}">Owned</a>
     <a href="{% url 'wishlist' %}">Wishlist</a>
     <a href="{% url 'stats' %}">Stats</a>
-    <a href="{% url 'profile' %}">Profile</a>
-    {% if user.is_authenticated %}
-    <a href="{% url 'logout' %}">Logout</a>
-    {% endif %}
   </nav>
 
   <script>window.STATIC_URL = "{% static '' %}";</script>
