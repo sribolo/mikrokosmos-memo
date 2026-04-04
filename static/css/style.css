@@ -137,8 +137,8 @@
 }
 
   .theme-toggle img {
-    width: 28px;
-    height: 28px;
+    width: 44px;
+    height: 44px;
   }
 
   .theme-toggle:hover {
@@ -967,12 +967,26 @@
     border-radius: 999px;
     padding: 8px;
     display: none;
-    justify-content: space-around;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
     gap: 4px;
     background: var(--surface);
     border: 1px solid var(--line);
     box-shadow: var(--shadow);
     z-index: 110;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
   
   @media (max-width: 1000px) {
