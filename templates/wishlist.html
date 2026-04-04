@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mikrokosmos Memo | Wishlist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body data-page="wishlist">
+  <header class="site-header">
+    <div class="container header-inner">
+  
+      <!-- LEFT: LOGO -->
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="{% static 'images/icon.png' %}" alt="Logo">
+        </div>
+        <div>
+          <h1>Mikrokosmos Memo</h1>
+          <p>For every era you never let go.</p>
+        </div>
+      </div>
+    
+      <!-- CENTER: NAV -->
+      <nav class="top-nav">
+        <a href="{% url 'home' %}" class="active">Home</a>
+        <a href="{% url 'collection' %}">Collection</a>
+        <a href="{% url 'owned' %}">Owned</a>
+        <a href="{% url 'wishlist' %}">Wishlist</a>
+        <a href="{% url 'stats' %}">Stats</a>
+      </nav>
+    
+      <!-- RIGHT: PROFILE + LIGHTSTICK -->
+      <div class="nav-right">
+    
+        {% if user.is_authenticated %}
+          <a href="{% url 'profile' %}" class="profile-icon">
+            {{ user.username|slice:":1"|upper }}
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="profile-icon">
+            👤
+          </a>
+        {% endif %}
+    
+        <button id="themeToggle" class="icon-btn theme-toggle">
+          <img id="themeToggleIcon"
+               src="{% static 'images/lightstick_off.png' %}">
+        </button>
+    
+      </div>
+    
+    </div>
+  </header>
+
+  <main class="container page">
+    <section class="page-top card-surface">
+      <div>
+        <h2>Wishlist</h2>
+        <p>Your wanted photocards, all in one place.</p>
+      </div>
+    </section>
+
+    <section class="stats-strip">
+      <div class="mini-stat mini-stat-light">
+        <span>Wishlist</span>
+        <strong id="wishlistCount">0</strong>
+      </div>
+      <div class="mini-stat mini-stat-light">
+        <span>Owned</span>
+        <strong id="ownedCount">0</strong>
+      </div>
+      <div class="mini-stat mini-stat-light">
+        <span>Total</span>
+        <strong id="totalCount">0</strong>
+      </div>
+    </section>
+
+    <section id="wishlistGrid" class="card-grid"></section>
+  </main>
+
+  <nav class="mobile-nav">
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'collection' %}">Collection</a>
+    <a href="{% url 'owned' %}">Owned</a>
+    <a href="{% url 'wishlist' %}" class="active">Wishlist</a>
+    <a href="{% url 'stats' %}">Stats</a>
+  </nav>
+
+  <script>window.STATIC_URL = "{% static '' %}";</script>
+  <script>window.CSRF_TOKEN = "{{ csrf_token }}";</script>
+  <script src="{% static 'js/data.js' %}"></script>
+  <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  
+</body>
+</html>

@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mikrokosmos Memo | Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="container header-inner">
+  
+      <!-- LEFT: LOGO -->
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="{% static 'images/icon.png' %}" alt="Logo">
+        </div>
+        <div>
+          <h1>Mikrokosmos Memo</h1>
+          <p>For every era you never let go.</p>
+        </div>
+      </div>
+    
+      <!-- CENTER: NAV -->
+      <nav class="top-nav">
+        <a href="{% url 'home' %}" class="active">Home</a>
+        <a href="{% url 'collection' %}">Collection</a>
+        <a href="{% url 'owned' %}">Owned</a>
+        <a href="{% url 'wishlist' %}">Wishlist</a>
+        <a href="{% url 'stats' %}">Stats</a>
+      </nav>
+    
+      <!-- RIGHT: PROFILE + LIGHTSTICK -->
+      <div class="nav-right">
+    
+        {% if user.is_authenticated %}
+          <a href="{% url 'profile' %}" class="profile-icon">
+            {{ user.username|slice:":1"|upper }}
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="profile-icon">
+            👤
+          </a>
+        {% endif %}
+    
+        <button id="themeToggle" class="icon-btn theme-toggle">
+          <img id="themeToggleIcon"
+               src="{% static 'images/lightstick_off.png' %}">
+        </button>
+    
+      </div>
+    
+    </div>
+  </header>
+
+  <main class="container page">
+    <section class="hero hero-home">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          For every era {% if user.is_authenticated %}@{{ user.username }} loves{% else %}you love{% endif %}
+        </p>
+        <h2>Every era, every memory, all yours</h2>
+        <p class="hero-text">
+            Track your BTS photocards, build your wishlist, and hold onto the moments that made you stay.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="{% url 'collection' %}">Open Collection</a>
+          <a class="btn btn-secondary" href="{% url 'wishlist' %}">View Wishlist</a>
+        </div>
+      </div>
+
+      <div class="hero-stats">
+        <div class="mini-stat">
+          <span>Owned</span>
+          <strong id="ownedCount">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Wishlist</span>
+          <strong id="wishlistCount">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Completion</span>
+          <strong id="completionPct">0%</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <h3>Latest BTS News</h3>
+        <p>Homepage highlights</p>
+      </div>
+      <div class="slider-controls">
+        <button id="prevNewsBtn" class="icon-btn">←</button>
+        <button id="nextNewsBtn" class="icon-btn">→</button>
+      </div>
+    </section>
+
+    <section class="news-feature" id="featuredNewsCard"></section>
+
+    <section class="news-grid" id="newsGrid"></section>
+
+    <section class="section-heading">
+      <div>
+        <h3>Quick Access</h3>
+        <p>Jump into your tracker</p>
+      </div>
+    </section>
+
+    <section class="quick-grid">
+      <a href="{% url 'collection' %}" class="quick-card">
+        <h4>Collection</h4>
+        <p>Browse cards by era, version, and member.</p>
+      </a>
+
+      <a href="{% url 'wishlist' %}" class="quick-card">
+        <h4>Wishlist</h4>
+        <p>See the cards you still want to collect.</p>
+      </a>
+
+      <a href="{% url 'stats' %}" class="quick-card">
+        <h4>Stats</h4>
+        <p>Track completion and collection growth.</p>
+      </a>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <h3>Spotlight</h3>
+        <p>Featured fan section</p>
+      </div>
+    </section>
+
+    <section class="spotlight-card">
+      <div class="spotlight-visual">
+        <img src="{% static 'images/bts-mm.webp' %}" style="width:100%; height:100%; object-fit:cover; border-radius:18px;">
+      </div> 
+
+      <div class="spotlight-copy">
+        <span class="tag">Comeback</span>
+        <h4>We are seven, again. 💜</h4>
+        <p>
+          After nearly four years, all seven members reunited for <em>Arirang</em> — 
+          BTS's 5th full studio album, released March 20, 2026. A love letter to their 
+          roots, their fans, and each other. The world tour begins April 9.
+        </p>
+        <a href="https://open.spotify.com/album/3ukkRHDHbN8tNRPKsGZR1h" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top: 16px; display: inline-flex;">Listen now</a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav">
+    <a href="{% url 'home' %}" class="active">Home</a>
+    <a href="{% url 'collection' %}">Collection</a>
+    <a href="{% url 'owned' %}">Owned</a>
+    <a href="{% url 'wishlist' %}">Wishlist</a>
+    <a href="{% url 'stats' %}">Stats</a>
+  </nav>
+
+  <script>window.STATIC_URL = "{% static '' %}";</script>
+  <script>window.CSRF_TOKEN = "{{ csrf_token }}";</script>
+  <script src="{% static 'js/data.js' %}"></script>
+  <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up | Mikrokosmos Memo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body class="auth-page">
+  <main class="auth-wrapper">
+    <section class="card-surface auth-card">
+      <h1 class="auth-title">Create account</h1>
+      <p class="auth-subtitle">Save your collection to your account.</p>
+
+      {% if form.non_field_errors %}
+        <div class="auth-messages">
+          {% for error in form.non_field_errors %}
+            <div class="auth-message error">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        <div class="auth-field">
+          <label class="auth-label" for="id_username">Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="auth-messages">
+              {% for error in form.username.errors %}
+                <div class="auth-message error">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="id_email">Email (optional)</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <div class="auth-messages">
+              {% for error in form.email.errors %}
+                <div class="auth-message error">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="id_password1">Password</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}
+            <div class="auth-messages">
+              {% for error in form.password1.errors %}
+                <div class="auth-message error">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="id_password2">Confirm password</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}
+            <div class="auth-messages">
+              {% for error in form.password2.errors %}
+                <div class="auth-message error">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-btn">Sign up</button>
+      </form>
+
+      <div class="auth-links">
+        <p>
+          Already have an account?
+          <a href="{% url 'login' %}">Log in</a>
+        </p>
+        <p><a href="{% url 'home' %}">Back to home</a></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

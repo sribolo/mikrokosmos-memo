@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mikrokosmos Memo | Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body data-page="profile">
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="{% static 'images/icon.png' %}" alt="Logo">
+        </div>
+        <div>
+          <h1>Mikrokosmos Memo</h1>
+          <p>For every era you never let go.</p>
+        </div>
+      </div>
+
+      <nav class="top-nav">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'collection' %}">Collection</a>
+        <a href="{% url 'owned' %}">Owned</a>
+        <a href="{% url 'wishlist' %}">Wishlist</a>
+        <a href="{% url 'stats' %}">Stats</a>
+      </nav>
+
+      <div class="nav-right">
+        <a href="{% url 'profile' %}" class="profile-icon">
+          {{ request.user.username|slice:":1"|upper }}
+        </a>
+
+        <button id="themeToggle" class="icon-btn theme-toggle" aria-label="Toggle theme">
+          <img id="themeToggleIcon" src="{% static 'images/lightstick_off.png' %}" alt="Theme toggle icon">
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <section class="hero hero-home">
+      <div class="hero-copy">
+        <p class="eyebrow">Collector Profile</p>
+        <h2>@{{ request.user.username }}</h2>
+        <p class="hero-text">
+          Your personal archive for every BTS era, every wishlist pull, and every photocard memory you want to keep close.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="{% url 'collection' %}">Open Collection</a>
+          <a class="btn btn-secondary" href="{% url 'wishlist' %}">View Wishlist</a>
+        </div>
+      </div>
+
+      <div class="hero-stats">
+        <div class="mini-stat">
+          <span>Owned</span>
+          <strong>{{ owned_count }}</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Wishlist</span>
+          <strong>{{ wishlist_count }}</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Total Marked</span>
+          <strong>{{ total_marked }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <h3>Quick Access</h3>
+        <p>Jump back into your collection</p>
+      </div>
+    </section>
+
+    <section class="quick-grid">
+      <a href="{% url 'owned' %}" class="quick-card">
+        <h4>Owned</h4>
+        <p>See all the photocards you’ve already collected.</p>
+      </a>
+
+      <a href="{% url 'wishlist' %}" class="quick-card">
+        <h4>Wishlist</h4>
+        <p>Keep track of the cards you still want.</p>
+      </a>
+
+      <a href="{% url 'stats' %}" class="quick-card">
+        <h4>Stats</h4>
+        <p>Check your progress across every era.</p>
+      </a>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <h3>Account</h3>
+        <p>Your personal space</p>
+      </div>
+    </section>
+
+    <section class="card-surface page-top">
+      <div>
+        <h2 style="font-size: 1.6rem;">Signed in as @{{ request.user.username }}</h2>
+        <p>Manage your collection and keep building your archive.</p>
+      </div>
+
+      <div class="page-actions">
+        <a href="{% url 'logout' %}" class="btn btn-ghost">Log out</a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav">
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'collection' %}">Collection</a>
+    <a href="{% url 'owned' %}">Owned</a>
+    <a href="{% url 'wishlist' %}">Wishlist</a>
+    <a href="{% url 'stats' %}">Stats</a>
+  </nav>
+
+  <script>window.STATIC_URL = "{% static '' %}";</script>
+  <script src="{% static 'js/theme.js' %}"></script>
+</body>
+</html>

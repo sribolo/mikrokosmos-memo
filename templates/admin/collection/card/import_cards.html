@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Import Cards</h1>
+  <p>Accepted formats: <strong>.csv</strong> or <strong>.json</strong>.</p>
+  <p>Required fields: <code>card_id</code> (or <code>id</code>), <code>era</code>, <code>member</code>.</p>
+
+  <form method="post" enctype="multipart/form-data" style="max-width: 780px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="submit-row">
+      <input type="submit" class="default" value="Import" />
+      <a href="{% url 'admin:collection_card_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+  </form>
+
+  <h2>Sample CSV Header</h2>
+  <pre>card_id,era,version,member,image,card_type,is_active</pre>
+
+  <h2>Sample JSON</h2>
+  <pre>{"cards": [{"card_id": "proof-jin", "era": "Proof", "member": "Jin", "image": "images/proof-standard-jin.jpeg", "card_type": "BTS", "is_active": true}]}</pre>
+{% endblock %}

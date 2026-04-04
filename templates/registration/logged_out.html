@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Logged Out | Mikrokosmos Memo</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+
+<body class="auth-page">
+
+  <main class="auth-wrapper">
+    <section class="card-surface auth-card auth-center">
+
+      <h1 class="auth-title">You’re logged out</h1>
+      <p class="auth-subtitle">
+        your photocards are waiting for you 🫶
+      </p>
+
+      <div class="auth-actions">
+        <a href="{% url 'login' %}" class="btn btn-primary">Log in again</a>
+        <a href="{% url 'home' %}" class="btn btn-ghost">Return home</a>
+      </div>
+
+    </section>
+  </main>
+
+</body>
+</html>

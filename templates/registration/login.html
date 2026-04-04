@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Mikrokosmos Memo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'site.webmanifest' %}">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body class="auth-page">
+  <main class="auth-wrapper">
+    <section class="card-surface auth-card">
+      
+      <h2 class="auth-title">Log in</h2>
+      <p class="auth-subtitle">Access your saved collection.</p>
+
+      {% if form.errors %}
+        <p class="auth-error">Invalid username or password.</p>
+      {% endif %}
+
+      <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        <div class="auth-field">
+          <label for="id_username">Username</label>
+          {{ form.username }}
+        </div>
+
+        <div class="auth-field">
+          <label for="id_password">Password</label>
+          {{ form.password }}
+        </div>
+
+        <button type="submit" class="btn btn-primary auth-btn">
+          Log in
+        </button>
+      </form>
+
+      <div class="auth-links">
+        <p>Need an account? <a href="{% url 'signup' %}">Sign up</a></p>
+        <p><a href="{% url 'home' %}">Back to home</a></p>
+      </div>
+
+    </section>
+  </main>
+</body>
+</html>
