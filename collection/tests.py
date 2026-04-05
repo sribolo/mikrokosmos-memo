@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -77,27 +78,25 @@ class CollectionStateApiTests(TestCase):
         self.assertEqual(payload["cards"][0]["id"], "proof-jin")
 
     def test_cards_api_prefers_uploaded_image_when_present(self):
-        card = Card.objects.create(
+        Card.objects.create(
             card_id="proof-v",
             era="Proof",
             version="Collector",
             member="V",
             image="images/proof-collector-wv-v.jpeg",
+            image_upload="https://res.cloudinary.com/demo/image/upload/v1/proof-v.png",
             card_type="BTS",
             is_active=True,
         )
-        upload = SimpleUploadedFile(
-            "proof-v.png",
-            b"fake-image-content",
-            content_type="image/png",
-        )
-        card.image_upload.save("proof-v.png", upload, save=True)
 
         response = self.client.get("/api/cards/")
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertTrue(payload["cards"][0]["image"].startswith("http://testserver/media/card_images/"))
+        self.assertEqual(
+            payload["cards"][0]["image"],
+            "https://res.cloudinary.com/demo/image/upload/v1/proof-v.png",
+        )
 
     def test_admin_import_cards_csv_creates_records(self):
         user_model = get_user_model()
@@ -174,3 +173,41 @@ class CollectionStateApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         card = Card.objects.get(card_id="proof-jin")
         self.assertEqual(card.version, "Standard")
+
+    def test_admin_save_uploads_card_image_to_cloudinary(self):
+        user_model = get_user_model()
+        admin_user = user_model.objects.create_superuser(
+            username="adminuser3",
+            email="admin3@example.com",
+            password="strong-pass-123",
+        )
+        self.client.force_login(admin_user)
+
+        upload = SimpleUploadedFile(
+            "proof-jin.png",
+            b"fake-image-content",
+            content_type="image/png",
+        )
+
+        with patch("collection.admin.upload_image") as mock_upload:
+            mock_upload.return_value = {
+                "url": "https://res.cloudinary.com/demo/image/upload/v1/proof-jin.png",
+                "public_id": "mikrokosmos_memo/cards/proof-jin",
+            }
+            response = self.client.post(
+                reverse("admin:collection_card_add"),
+                data={
+                    "card_id": "proof-jin",
+                    "era": "Proof",
+                    "version": "Standard",
+                    "member": "Jin",
+                    "card_type": "BTS",
+                    "is_active": "on",
+                    "image_upload_file": upload,
+                },
+                follow=True,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        card = Card.objects.get(card_id="proof-jin")
+        self.assertEqual(card.image_upload, "https://res.cloudinary.com/demo/image/upload/v1/proof-jin.png")

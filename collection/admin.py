@@ -7,6 +7,8 @@ from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 from django.urls import path
 
+from bts_pc_website.cloudinary_utils import destroy_image, upload_image
+
 from .models import Card, CollectionState
 
 
@@ -19,7 +21,18 @@ class CollectionStateAdmin(admin.ModelAdmin):
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):
+    class CardAdminForm(forms.ModelForm):
+        image_upload_file = forms.FileField(
+            required=False,
+            help_text="Upload a card image to Cloudinary. Leave blank to keep the current uploaded image.",
+        )
+
+        class Meta:
+            model = Card
+            fields = "__all__"
+
     change_list_template = "admin/collection/card/change_list.html"
+    form = CardAdminForm
     list_display = ("card_id", "era", "member", "version", "has_uploaded_image", "is_active", "updated_at")
     list_filter = ("era", "member", "is_active")
     search_fields = ("card_id", "era", "version", "member")
@@ -42,7 +55,7 @@ class CardAdmin(admin.ModelAdmin):
             "Images",
             {
                 "description": "Upload a card image here to avoid pushing files to the repo. The legacy static image path still works as a fallback.",
-                "fields": ("image_upload", "image"),
+                "fields": ("image_upload_file", "image_upload", "image"),
             },
         ),
         (
@@ -66,6 +79,20 @@ class CardAdmin(admin.ModelAdmin):
     @admin.display(boolean=True, description="Uploaded image")
     def has_uploaded_image(self, obj):
         return bool(obj.image_upload)
+
+    def save_model(self, request, obj, form, change):
+        image_upload_file = form.cleaned_data.get("image_upload_file")
+        if image_upload_file:
+            if obj.image_upload_public_id:
+                destroy_image(obj.image_upload_public_id)
+            uploaded = upload_image(
+                image_upload_file,
+                folder="mikrokosmos_memo/cards",
+                public_id=obj.card_id,
+            )
+            obj.image_upload = uploaded["url"]
+            obj.image_upload_public_id = uploaded["public_id"]
+        super().save_model(request, obj, form, change)
 
     def get_urls(self):
         urls = super().get_urls()

@@ -18,8 +18,10 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="user_profile",
     )
-    photo = models.FileField(upload_to=user_profile_photo_upload_to, blank=True)
-    header_photo = models.FileField(upload_to=user_header_photo_upload_to, blank=True)
+    photo = models.URLField(blank=True, default="")
+    photo_public_id = models.CharField(max_length=255, blank=True, default="")
+    header_photo = models.URLField(blank=True, default="")
+    header_photo_public_id = models.CharField(max_length=255, blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

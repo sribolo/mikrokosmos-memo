@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -28,10 +29,15 @@ class ProfilePhotoApiTests(TestCase):
             content_type="image/png",
         )
 
-        response = self.client.post(
-            "/accounts/profile/photo/upload/",
-            data={"photo": upload, "kind": "photo"},
-        )
+        with patch("users.views.upload_image") as mock_upload:
+            mock_upload.return_value = {
+                "url": "https://res.cloudinary.com/demo/image/upload/v1/profile.png",
+                "public_id": "mikrokosmos_memo/profiles/user_1_photo",
+            }
+            response = self.client.post(
+                "/accounts/profile/photo/upload/",
+                data={"photo": upload, "kind": "photo"},
+            )
 
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content)
@@ -53,10 +59,15 @@ class ProfilePhotoApiTests(TestCase):
             content_type="image/webp",
         )
 
-        response = self.client.post(
-            "/accounts/profile/photo/upload/",
-            data={"photo": upload, "kind": "header"},
-        )
+        with patch("users.views.upload_image") as mock_upload:
+            mock_upload.return_value = {
+                "url": "https://res.cloudinary.com/demo/image/upload/v1/header.webp",
+                "public_id": "mikrokosmos_memo/profiles/user_1_header_photo",
+            }
+            response = self.client.post(
+                "/accounts/profile/photo/upload/",
+                data={"photo": upload, "kind": "header"},
+            )
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()

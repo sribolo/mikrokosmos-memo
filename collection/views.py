@@ -68,11 +68,7 @@ def cards_api(request):
             "era": card.era,
             "version": card.version or "",
             "member": card.member,
-            "image": (
-                request.build_absolute_uri(card.image_upload.url)
-                if card.image_upload
-                else card.image or ""
-            ),
+            "image": card.image_upload or card.image or "",
             "type": card.card_type or "",
         }
         for card in cards

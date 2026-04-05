@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
 
+from bts_pc_website.cloudinary_utils import destroy_image, upload_image
 from collection.models import Card, CollectionState
 
 from .forms import SignUpForm
@@ -26,7 +27,11 @@ def _get_or_create_user_profile(user):
 def _build_media_url(request, file_field, profile=None):
     if not file_field:
         return ""
-    absolute_url = request.build_absolute_uri(file_field.url)
+    absolute_url = (
+        file_field
+        if str(file_field).startswith(("http://", "https://"))
+        else request.build_absolute_uri(str(file_field))
+    )
     if not profile or not profile.updated_at:
         return absolute_url
     version = int(profile.updated_at.timestamp())
@@ -150,11 +155,13 @@ def upload_profile_photo(request):
     profile = _get_or_create_user_profile(request.user)
 
     if request.POST.get("remove") == "1":
-        existing_file = getattr(profile, field_name)
-        if existing_file:
-            existing_file.delete(save=False)
-            setattr(profile, field_name, "")
-            profile.save(update_fields=[field_name, "updated_at"])
+        public_id_field = "photo_public_id" if field_name == "photo" else "header_photo_public_id"
+        existing_public_id = getattr(profile, public_id_field)
+        if existing_public_id:
+            destroy_image(existing_public_id)
+        setattr(profile, field_name, "")
+        setattr(profile, public_id_field, "")
+        profile.save(update_fields=[field_name, public_id_field, "updated_at"])
         return JsonResponse(_profile_media_payload(request, profile))
 
     upload = request.FILES.get("photo")
@@ -168,10 +175,19 @@ def upload_profile_photo(request):
     if upload.size > MAX_PROFILE_PHOTO_SIZE:
         return JsonResponse({"error": "Profile photo must be 5MB or smaller."}, status=400)
 
-    existing_file = getattr(profile, field_name)
-    if existing_file:
-        existing_file.delete(save=False)
-    getattr(profile, field_name).save(upload.name, upload, save=True)
+    public_id_field = "photo_public_id" if field_name == "photo" else "header_photo_public_id"
+    existing_public_id = getattr(profile, public_id_field)
+    if existing_public_id:
+        destroy_image(existing_public_id)
+
+    uploaded = upload_image(
+        upload,
+        folder="mikrokosmos_memo/profiles",
+        public_id=f"user_{request.user.id}_{field_name}",
+    )
+    setattr(profile, field_name, uploaded["url"])
+    setattr(profile, public_id_field, uploaded["public_id"])
+    profile.save(update_fields=[field_name, public_id_field, "updated_at"])
 
     return JsonResponse(_profile_media_payload(request, profile))
 

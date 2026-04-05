@@ -29,12 +29,12 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
   }
 
   function getCsrfToken() {
-    if (window.CSRF_TOKEN) return window.CSRF_TOKEN;
     const cookieValue = document.cookie
       .split("; ")
       .find((row) => row.startsWith("csrftoken="))
       ?.split("=")[1];
-    return cookieValue || "";
+    if (cookieValue) return cookieValue;
+    return window.CSRF_TOKEN || "";
   }
 
   function applyProfilePhoto(photoDataUrl) {

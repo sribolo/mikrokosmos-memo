@@ -15,6 +15,8 @@ import os
 import sys
 from pathlib import Path
 
+import cloudinary
+
 try:
     import dj_database_url
 except ImportError:  # pragma: no cover - optional in local envs
@@ -45,6 +47,21 @@ if DEBUG:
 render_external_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
 if render_external_hostname:
     ALLOWED_HOSTS.append(render_external_hostname)
+
+cloudinary_url = os.getenv("CLOUDINARY_URL", "").strip()
+cloudinary_cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+cloudinary_api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
+cloudinary_api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
+
+if cloudinary_url:
+    cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
+elif cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
+    cloudinary.config(
+        cloud_name=cloudinary_cloud_name,
+        api_key=cloudinary_api_key,
+        api_secret=cloudinary_api_secret,
+        secure=True,
+    )
 
 
 # Application definition
