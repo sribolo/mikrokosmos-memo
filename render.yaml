@@ -9,6 +9,8 @@ services:
       python manage.py migrate
     startCommand: gunicorn bts_pc_website.wsgi:application --log-file -
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
