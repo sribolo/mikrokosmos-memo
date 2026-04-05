@@ -1,6 +1,8 @@
 let state = {
     owned: {},
     wishlist: {},
+    favorites: {},
+    activity: [],
     search: "",
     era: "All",
     version: "All",
@@ -10,11 +12,11 @@ let state = {
     wishlistMode: false
   };
   
-  let newsIndex = 0;
-  let serverSaveTimer = null;
-  let canSyncStateToServer = true;
-  let cardsCatalog = Array.isArray(CARDS) ? [...CARDS] : [];
-  let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
+let newsIndex = 0;
+let serverSaveTimer = null;
+let canSyncStateToServer = true;
+let cardsCatalog = Array.isArray(CARDS) ? [...CARDS] : [];
+let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
 
   function staticAsset(path) {
     const base = window.STATIC_URL || "/static/";
@@ -30,6 +32,163 @@ let state = {
     return cookieValue || "";
   }
 
+  function applyProfilePhoto(photoDataUrl) {
+    const profileIcons = document.querySelectorAll(".profile-icon");
+    const bannerAvatar = document.getElementById("profileBannerAvatarImage");
+
+    profileIcons.forEach((icon) => {
+      if (!photoDataUrl) {
+        icon.classList.remove("has-photo");
+        const fallback = icon.dataset.fallback;
+        if (fallback) {
+          icon.textContent = fallback;
+        }
+        return;
+      }
+
+      if (!icon.dataset.fallback) {
+        icon.dataset.fallback = icon.textContent.trim();
+      }
+      icon.classList.add("has-photo");
+      icon.innerHTML = `<img src="${photoDataUrl}" alt="Profile picture">`;
+    });
+
+    if (bannerAvatar && photoDataUrl) {
+      bannerAvatar.src = photoDataUrl;
+    }
+  }
+
+  function applyHeaderPhoto(photoDataUrl) {
+    const headerImage = document.getElementById("profileHeaderImage");
+    if (headerImage && photoDataUrl) {
+      headerImage.src = photoDataUrl;
+    }
+  }
+
+  async function loadProfilePhotoFromServer() {
+    try {
+      const response = await fetch("/accounts/profile/photo/", {
+        method: "GET",
+        credentials: "same-origin"
+      });
+      if (response.status === 401 || !response.ok) return;
+
+      const payload = await response.json();
+      if (!payload) return;
+      if (payload.photo_url) applyProfilePhoto(payload.photo_url);
+      if (payload.header_photo_url) applyHeaderPhoto(payload.header_photo_url);
+    } catch (error) {
+      console.error("Failed to load profile photo:", error);
+    }
+  }
+
+  async function uploadProfileMedia(kind, file) {
+    const formData = new FormData();
+    formData.append("photo", file);
+    formData.append("kind", kind);
+
+    const response = await fetch("/accounts/profile/photo/upload/", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-CSRFToken": getCsrfToken()
+      },
+      body: formData
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "Could not upload media.");
+    }
+    if (payload.photo_url) applyProfilePhoto(payload.photo_url);
+    if (payload.header_photo_url) applyHeaderPhoto(payload.header_photo_url);
+  }
+
+  async function removeProfileMedia(kind) {
+    const formData = new FormData();
+    formData.append("kind", kind);
+    formData.append("remove", "1");
+
+    const response = await fetch("/accounts/profile/photo/upload/", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-CSRFToken": getCsrfToken()
+      },
+      body: formData
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "Could not remove media.");
+    }
+    if (kind === "photo") {
+      window.location.reload();
+      return;
+    }
+    window.location.reload();
+  }
+
+  function setupProfilePhotoUpload() {
+    const headerTrigger = document.getElementById("headerPhotoTrigger");
+    const editMenu = document.getElementById("profileEditMenu");
+    const chooseHeaderPhotoBtn = document.getElementById("chooseHeaderPhotoBtn");
+    const chooseProfilePhotoBtn = document.getElementById("chooseProfilePhotoBtn");
+    const photoInput = document.getElementById("profilePhotoInput");
+    const headerInput = document.getElementById("headerPhotoInput");
+    if (!photoInput || !headerInput) return;
+
+    if (headerTrigger) {
+      headerTrigger.onclick = (event) => {
+        event.stopPropagation();
+        if (!editMenu) {
+          headerInput.click();
+          return;
+        }
+        editMenu.classList.toggle("hidden");
+      };
+    }
+
+    if (chooseHeaderPhotoBtn) {
+      chooseHeaderPhotoBtn.onclick = () => {
+        if (editMenu) editMenu.classList.add("hidden");
+        headerInput.click();
+      };
+    }
+
+    if (chooseProfilePhotoBtn) {
+      chooseProfilePhotoBtn.onclick = () => {
+        if (editMenu) editMenu.classList.add("hidden");
+        photoInput.click();
+      };
+    }
+
+    document.addEventListener("click", (event) => {
+      if (!editMenu || editMenu.classList.contains("hidden")) return;
+      const target = event.target;
+      if (target === headerTrigger || editMenu.contains(target)) return;
+      editMenu.classList.add("hidden");
+    });
+
+    photoInput.onchange = (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      uploadProfileMedia("photo", file).catch((error) => {
+        console.error("Failed to upload profile photo:", error);
+        window.alert(error.message || "Could not upload profile photo.");
+      });
+      event.target.value = "";
+    };
+
+    headerInput.onchange = (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      uploadProfileMedia("header", file).catch((error) => {
+        console.error("Failed to upload header photo:", error);
+        window.alert(error.message || "Could not upload header photo.");
+      });
+      event.target.value = "";
+    };
+  }
+
   function sanitizeState(payload) {
     if (!payload || typeof payload !== "object") return { ...state };
 
@@ -37,8 +196,11 @@ let state = {
       ...state,
       ...payload,
       owned: payload.owned && typeof payload.owned === "object" ? payload.owned : {},
+      favorites:
+        payload.favorites && typeof payload.favorites === "object" ? payload.favorites : {},
       wishlist:
-        payload.wishlist && typeof payload.wishlist === "object" ? payload.wishlist : {}
+        payload.wishlist && typeof payload.wishlist === "object" ? payload.wishlist : {},
+      activity: Array.isArray(payload.activity) ? payload.activity.slice(0, 12) : []
     };
   }
 
@@ -181,33 +343,86 @@ let state = {
   function isWishlisted(id) {
     return !!state.wishlist[id];
   }
+
+  function isFavorite(id) {
+    return !!state.favorites[id];
+  }
   
   function isSoloAlbum(card) {
     return SOLO_ALBUMS.includes(card.era);
   }
 
+  function findCardById(id) {
+    return cardsCatalog.find((card) => card.id === id) || null;
+  }
+
+  function recordActivity(action, card) {
+    if (!card) return;
+
+    const labels = {
+      owned_added: "Marked as owned",
+      owned_removed: "Removed from owned",
+      wishlist_added: "Added to wishlist",
+      wishlist_removed: "Removed from wishlist",
+      favorite_added: "Added to favorites",
+      favorite_removed: "Removed from favorites"
+    };
+
+    state.activity = [
+      {
+        action,
+        label: labels[action] || "Updated collection",
+        cardId: card.id,
+        member: card.member || "",
+        era: card.era || "",
+        version: card.version || "",
+        at: new Date().toISOString()
+      },
+      ...(Array.isArray(state.activity) ? state.activity : [])
+    ].slice(0, 12);
+  }
+
   function toggleOwned(id) {
+    const card = findCardById(id);
     if (isOwned(id)) {
       delete state.owned[id];
+      recordActivity("owned_removed", card);
     } else {
       state.owned[id] = true;
       delete state.wishlist[id];
+      recordActivity("owned_added", card);
     }
     saveState();
     renderCurrentPage();
   }
   
   function toggleWishlist(id) {
+    const card = findCardById(id);
     if (isWishlisted(id)) {
       delete state.wishlist[id];
+      recordActivity("wishlist_removed", card);
     } else {
       state.wishlist[id] = true;
       delete state.owned[id];
+      recordActivity("wishlist_added", card);
     }
     saveState();
     renderCurrentPage();
   }
-  
+
+  function toggleFavorite(id) {
+    const card = findCardById(id);
+    if (isFavorite(id)) {
+      delete state.favorites[id];
+      recordActivity("favorite_removed", card);
+    } else {
+      state.favorites[id] = true;
+      recordActivity("favorite_added", card);
+    }
+    saveState();
+    renderCurrentPage();
+  }
+
   function applyCardClick(id) {
     if (state.wishlistMode) {
       toggleWishlist(id);
@@ -262,10 +477,18 @@ let state = {
     if (progressFill) progressFill.style.width = `${completionPct}%`;
     if (progressText) progressText.textContent = `${ownedCount} of ${totalCount} cards collected`;
   }
+
+  function toggleFromButton(event, action, id) {
+    event.stopPropagation();
+    if (action === "owned") toggleOwned(id);
+    if (action === "wishlist") toggleWishlist(id);
+    if (action === "favorite") toggleFavorite(id);
+  }
   
   function createCardHTML(card) {
     const owned = isOwned(card.id);
     const wishlisted = isWishlisted(card.id);
+    const favorite = isFavorite(card.id);
   
     const currentPage = document.body.dataset.page;
     const isOwnedPage = currentPage === "owned";
@@ -289,22 +512,22 @@ let state = {
   
     let actionsHTML = `
       <div class="photocard-actions">
-        <button class="mini-btn ${owned ? "active-owned" : ""}" onclick="toggleOwned('${card.id}')">
+        <button type="button" class="mini-btn ${owned ? "active-owned" : ""}" onclick="toggleFromButton(event, 'owned', '${card.id}')">
           ${owned ? "Owned ✓" : "Owned"}
         </button>
-        <button class="mini-btn ${wishlisted ? "active-wishlist" : ""}" onclick="toggleWishlist('${card.id}')">
+        <button type="button" class="mini-btn ${wishlisted ? "active-wishlist" : ""}" onclick="toggleFromButton(event, 'wishlist', '${card.id}')">
           ${wishlisted ? "Wishlisted ♥" : "Wishlist"}
         </button>
       </div>
     `;
-  
+
     let visualClick = `onclick="applyCardClick('${card.id}')"`;
-  
+
     if (isOwnedPage) {
       visualClick = "";
       actionsHTML = `
         <div class="photocard-actions">
-          <button class="mini-btn active-owned" onclick="toggleOwned('${card.id}')">
+          <button type="button" class="mini-btn active-owned" onclick="toggleFromButton(event, 'owned', '${card.id}')">
             Remove Owned
           </button>
         </div>
@@ -315,7 +538,7 @@ let state = {
       visualClick = "";
       actionsHTML = `
         <div class="photocard-actions">
-          <button class="mini-btn active-wishlist" onclick="toggleWishlist('${card.id}')">
+          <button type="button" class="mini-btn active-wishlist" onclick="toggleFromButton(event, 'wishlist', '${card.id}')">
             Remove Wishlist
           </button>
         </div>
@@ -341,31 +564,44 @@ let state = {
       </article>
     `;
   }
+
+  function getAlbumOrderIndex(era) {
+    const index = ALBUM_ORDER.indexOf(era);
+    return index === -1 ? ALBUM_ORDER.length + 100 : index;
+  }
+
+  function getMemberOrderIndex(member) {
+    const index = MEMBER_ORDER.indexOf(member);
+    return index === -1 ? MEMBER_ORDER.length + 100 : index;
+  }
   
   function sortCardsChronologically(cards) {
     return [...cards].sort((a, b) => {
-      // 1. Sort by album (era)
-      const eraA = ALBUM_ORDER.indexOf(a.era);
-      const eraB = ALBUM_ORDER.indexOf(b.era);
+      const eraA = getAlbumOrderIndex(a.era);
+      const eraB = getAlbumOrderIndex(b.era);
   
       if (eraA !== eraB) return eraA - eraB;
-  
-      // 2. Sort by version (if exists)
+
+      if (a.era !== b.era) {
+        return a.era.localeCompare(b.era);
+      }
+
       const versionA = a.version || "";
       const versionB = b.version || "";
   
       if (versionA !== versionB) {
         return versionA.localeCompare(versionB, undefined, { numeric: true });
       }
+
+      const memberA = getMemberOrderIndex(a.member);
+      const memberB = getMemberOrderIndex(b.member);
+
+      if (memberA !== memberB) return memberA - memberB;
   
-      // 3. Sort by member (custom order)
-      const memberA = MEMBER_ORDER.indexOf(a.member);
-      const memberB = MEMBER_ORDER.indexOf(b.member);
-  
-      return memberA - memberB;
+      return a.member.localeCompare(b.member);
     });
   }
-  
+
   function filteredCards() {
     return cardsCatalog.filter(card => {
       const searchMatch =
@@ -458,6 +694,7 @@ let state = {
           <p>Mark cards as owned from the collection page.</p>
         </div>
       `;
+
   }
   
   function getVersionsForEra(selectedEra) {
@@ -546,7 +783,7 @@ let state = {
         renderCurrentPage();
       };
     }
-  
+
     if (toggleWishlistModeBtn) {
       toggleWishlistModeBtn.textContent = `Wishlist Mode: ${state.wishlistMode ? "On" : "Off"}`;
       toggleWishlistModeBtn.onclick = () => {
@@ -574,7 +811,6 @@ let state = {
         </div>
       `;
   
-    setupImportExport();
   }
   
   function renderWishlistPage() {
@@ -593,6 +829,7 @@ let state = {
           <p>Add cards from the collection page.</p>
         </div>
       `;
+
   }
   
   function renderStatsPage() {
@@ -634,56 +871,7 @@ let state = {
     a.click();
     URL.revokeObjectURL(url);
   }
-  
-  function importData(file) {
-    const reader = new FileReader();
-  
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result);
-        if (!parsed.state) throw new Error("Invalid file");
-  
-        state = { ...state, ...parsed.state };
-        saveState();
-        renderCurrentPage();
-        alert("Import successful.");
-      } catch (error) {
-        alert("Could not import this file.");
-        console.error(error);
-      }
-    };
-  
-    reader.readAsText(file);
-  }
-  
-  function clearAllData() {
-    const ok = confirm("Clear all owned and wishlist data?");
-    if (!ok) return;
-  
-    state.owned = {};
-    state.wishlist = {};
-    saveState();
-    renderCurrentPage();
-  }
-  
-  function setupImportExport() {
-    const exportBtn = document.getElementById("exportBtn");
-    const importBtn = document.getElementById("importBtn");
-    const importFile = document.getElementById("importFile");
-    const clearBtn = document.getElementById("clearBtn");
-  
-    if (exportBtn) exportBtn.onclick = exportData;
-    if (importBtn) importBtn.onclick = () => importFile.click();
-    if (importFile) {
-      importFile.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) importData(file);
-        e.target.value = "";
-      };
-    }
-    if (clearBtn) clearBtn.onclick = clearAllData;
-  }
-  
+
   function renderCurrentPage() {
     renderCounts();
   
@@ -699,6 +887,8 @@ let state = {
   loadState();
   initTheme();
   renderCurrentPage();
+  setupProfilePhotoUpload();
+  loadProfilePhotoFromServer();
   loadCardsFromServer();
   loadNewsFromServer();
   loadStateFromServer();
