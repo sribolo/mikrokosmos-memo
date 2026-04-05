@@ -7,7 +7,7 @@ const TYPE_ORDER = ["group", "solo"];
 
 const ALBUM_ORDER = [
   "2 Cool 4 Skool",
-  "O!RUL8,2!",
+  "O!RUL8,2?",
   "Skool Luv Affair",
   "Skool Luv Affair (Special Addition)",
   "Dark & Wild",

@@ -21,13 +21,8 @@ services:
         fromDatabase:
           name: bts-website-db
           property: connectionString
-      - key: CLOUDINARY_CLOUD_NAME
-        value: ""
-      - key: CLOUDINARY_API_KEY
-        value: ""
-      - key: CLOUDINARY_API_SECRET
-        value: ""
-
+      - key: CLOUDINARY_URL
+        sync: false  
 databases:
   - name: bts-website-db
     plan: free
