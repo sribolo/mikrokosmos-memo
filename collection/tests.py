@@ -76,6 +76,29 @@ class CollectionStateApiTests(TestCase):
         self.assertEqual(len(payload["cards"]), 1)
         self.assertEqual(payload["cards"][0]["id"], "proof-jin")
 
+    def test_cards_api_prefers_uploaded_image_when_present(self):
+        card = Card.objects.create(
+            card_id="proof-v",
+            era="Proof",
+            version="Collector",
+            member="V",
+            image="images/proof-collector-wv-v.jpeg",
+            card_type="BTS",
+            is_active=True,
+        )
+        upload = SimpleUploadedFile(
+            "proof-v.png",
+            b"fake-image-content",
+            content_type="image/png",
+        )
+        card.image_upload.save("proof-v.png", upload, save=True)
+
+        response = self.client.get("/api/cards/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["cards"][0]["image"].startswith("http://testserver/media/card_images/"))
+
     def test_admin_import_cards_csv_creates_records(self):
         user_model = get_user_model()
         admin_user = user_model.objects.create_superuser(

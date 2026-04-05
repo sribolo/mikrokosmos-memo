@@ -4,6 +4,11 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+def card_image_upload_to(instance, filename):
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    return f"card_images/{instance.card_id}.{extension}"
+
+
 class CollectionState(models.Model):
     user = models.OneToOneField(
         User,
@@ -38,6 +43,7 @@ class Card(models.Model):
     version = models.CharField(max_length=120, blank=True, default="")
     member = models.CharField(max_length=60)
     image = models.CharField(max_length=255, blank=True, default="")
+    image_upload = models.FileField(upload_to=card_image_upload_to, blank=True)
     card_type = models.CharField(max_length=20, blank=True, default="")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

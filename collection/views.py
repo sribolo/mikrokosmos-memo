@@ -61,18 +61,19 @@ def collection_state_api(request):
 
 @require_http_methods(["GET"])
 def cards_api(request):
-    cards = (
-        Card.objects.filter(is_active=True)
-        .values("card_id", "era", "version", "member", "image", "card_type")
-    )
+    cards = Card.objects.filter(is_active=True)
     payload = [
         {
-            "id": card["card_id"],
-            "era": card["era"],
-            "version": card["version"] or "",
-            "member": card["member"],
-            "image": card["image"] or "",
-            "type": card["card_type"] or "",
+            "id": card.card_id,
+            "era": card.era,
+            "version": card.version or "",
+            "member": card.member,
+            "image": (
+                request.build_absolute_uri(card.image_upload.url)
+                if card.image_upload
+                else card.image or ""
+            ),
+            "type": card.card_type or "",
         }
         for card in cards
     ]

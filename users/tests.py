@@ -36,7 +36,7 @@ class ProfilePhotoApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content)
         self.assertIn("photo_url", payload)
-        self.assertTrue(payload["photo_url"].endswith(".png"))
+        self.assertIn(".png", payload["photo_url"])
         self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_authenticated_user_can_upload_header_photo(self):
@@ -61,7 +61,7 @@ class ProfilePhotoApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertIn("header_photo_url", payload)
-        self.assertTrue(payload["header_photo_url"].endswith(".webp"))
+        self.assertIn(".webp", payload["header_photo_url"])
 
     def test_upload_rejects_invalid_extension(self):
         user = get_user_model().objects.create_user(

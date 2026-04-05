@@ -20,9 +20,38 @@ class CollectionStateAdmin(admin.ModelAdmin):
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):
     change_list_template = "admin/collection/card/change_list.html"
-    list_display = ("card_id", "era", "member", "version", "is_active", "updated_at")
+    list_display = ("card_id", "era", "member", "version", "has_uploaded_image", "is_active", "updated_at")
     list_filter = ("era", "member", "is_active")
     search_fields = ("card_id", "era", "version", "member")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "card_id",
+                    "era",
+                    "version",
+                    "member",
+                    "card_type",
+                    "is_active",
+                )
+            },
+        ),
+        (
+            "Images",
+            {
+                "description": "Upload a card image here to avoid pushing files to the repo. The legacy static image path still works as a fallback.",
+                "fields": ("image_upload", "image"),
+            },
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": ("created_at", "updated_at"),
+            },
+        ),
+    )
 
     class ImportForm(forms.Form):
         file = forms.FileField(
@@ -33,6 +62,10 @@ class CardAdmin(admin.ModelAdmin):
             initial=True,
             help_text="When checked, existing cards with the same card_id are updated.",
         )
+
+    @admin.display(boolean=True, description="Uploaded image")
+    def has_uploaded_image(self, obj):
+        return bool(obj.image_upload)
 
     def get_urls(self):
         urls = super().get_urls()

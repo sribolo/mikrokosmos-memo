@@ -20,7 +20,12 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
 
   function staticAsset(path) {
     const base = window.STATIC_URL || "/static/";
-    return `${base}${String(path).replace(/^\/+/, "")}`;
+    const normalized = String(path || "");
+    if (!normalized) return "";
+    if (/^(https?:)?\/\//.test(normalized) || normalized.startsWith("/media/")) {
+      return normalized;
+    }
+    return `${base}${normalized.replace(/^\/+/, "")}`;
   }
 
   function getCsrfToken() {
