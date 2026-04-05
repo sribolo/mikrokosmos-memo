@@ -2,6 +2,7 @@ import json
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
@@ -95,3 +96,31 @@ class ProfilePhotoApiTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"error": "Upload a JPG, PNG, WEBP, or GIF image."})
+
+
+class MakeStaffCommandTests(TestCase):
+    def test_make_staff_promotes_existing_user(self):
+        user = get_user_model().objects.create_user(
+            username="moonbearjintae",
+            email="moon@example.com",
+            password="strong-pass-123",
+        )
+
+        call_command("make_staff", "moonbearjintae")
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_make_staff_can_grant_superuser(self):
+        user = get_user_model().objects.create_user(
+            username="adminarmy",
+            email="adminarmy@example.com",
+            password="strong-pass-123",
+        )
+
+        call_command("make_staff", "adminarmy", "--superuser")
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)

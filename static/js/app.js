@@ -76,7 +76,11 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
         method: "GET",
         credentials: "same-origin"
       });
-      if (response.status === 401 || !response.ok) return;
+      if (response.status === 401) {
+        handleSignedOutState();
+        return;
+      }
+      if (!response.ok) return;
 
       const payload = await response.json();
       if (!payload) return;
@@ -225,6 +229,25 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     }
   }
 
+  function clearStoredCollectionState() {
+    state = sanitizeState({});
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function handleSignedOutState() {
+    canSyncStateToServer = false;
+    clearStoredCollectionState();
+    renderCurrentPage();
+  }
+
+  function setupLogoutLinks() {
+    document.querySelectorAll('a[href$="/accounts/logout/"]').forEach((link) => {
+      link.addEventListener("click", () => {
+        clearStoredCollectionState();
+      });
+    });
+  }
+
   async function loadStateFromServer() {
     try {
       const response = await fetch("/api/state/", {
@@ -232,7 +255,7 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
         credentials: "same-origin"
       });
       if (response.status === 401) {
-        canSyncStateToServer = false;
+        handleSignedOutState();
         return;
       }
       if (!response.ok) return;
@@ -329,7 +352,7 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
       });
 
       if (response.status === 401) {
-        canSyncStateToServer = false;
+        handleSignedOutState();
       }
     } catch (error) {
       console.error("Failed to sync state to server:", error);
@@ -893,6 +916,7 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
   initTheme();
   renderCurrentPage();
   setupProfilePhotoUpload();
+  setupLogoutLinks();
   loadProfilePhotoFromServer();
   loadCardsFromServer();
   loadNewsFromServer();
