@@ -1156,6 +1156,10 @@
   .profile-header + .profile-panel {
     margin-top: 24px;
   }
+
+  .profile-grid + .profile-panel {
+    margin-top: 24px;
+  }
   
   .profile-actions {
     display: flex;
