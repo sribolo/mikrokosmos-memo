@@ -1129,10 +1129,43 @@
   }
 
   .profile-grid {
-    margin-top: 18px;
+    margin-top: 24px;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .profile-username-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: end;
+  }
+
+  .profile-username-field {
+    flex: 1 1 280px;
+  }
+
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .profile-header + .profile-panel {
+    margin-top: 24px;
+  }
+  
+  .profile-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .form-error {
+    margin-top: 8px;
+    color: #d84f67;
+    font-size: 0.92rem;
   }
 
   .profile-panel {

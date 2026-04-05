@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from bts_pc_website.cloudinary_utils import destroy_image, upload_image
 from collection.models import Card, CollectionState
 
-from .forms import SignUpForm
+from .forms import SignUpForm, UsernameUpdateForm
 from .models import UserProfile
 
 
@@ -64,6 +64,13 @@ def signup(request):
 
 @login_required
 def profile(request):
+    username_form = UsernameUpdateForm(instance=request.user)
+    if request.method == "POST":
+        username_form = UsernameUpdateForm(request.POST, instance=request.user)
+        if username_form.is_valid():
+            username_form.save()
+            return redirect("profile")
+
     record = CollectionState.objects.filter(user=request.user).first()
     profile_record = _get_or_create_user_profile(request.user)
     state = record.state if record else {}
@@ -131,6 +138,7 @@ def profile(request):
         "favorite_member": favorite_member,
         "recent_activity": activity_items,
         "badges": badges,
+        "username_form": username_form,
         "profile_photo_url": _build_media_url(request, profile_record.photo, profile_record),
         "header_photo_url": _build_media_url(request, profile_record.header_photo, profile_record),
     }

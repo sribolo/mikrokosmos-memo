@@ -141,16 +141,37 @@
       </div>
     </section>
 
-    <section class="card-surface page-top">
+    <section class="page-top card-surface profile-header">
       <div>
-        <h2 style="font-size: 1.6rem;">Signed in as @{{ request.user.username }}</h2>
+        <h2>Signed in as @{{ request.user.username }}</h2>
         <p>Manage your collection and keep building your archive.</p>
       </div>
-
-      <div class="page-actions">
-        <a href="{% url 'password_change' %}" class="btn btn-secondary">Change password</a>
+    
+      <div class="profile-actions">
+        <a href="#" class="btn btn-secondary">Change password</a>
         <a href="{% url 'logout' %}" class="btn btn-ghost">Log out</a>
       </div>
+    </section>
+
+    <section class="card-surface profile-panel">
+      <div class="section-heading compact">
+        <div>
+          <h3>Username</h3>
+          <p>Update how your collector name appears across the site</p>
+        </div>
+      </div>
+
+      <form method="post" class="profile-username-form">
+        {% csrf_token %}
+        <div class="profile-username-field">
+          <label for="{{ username_form.username.id_for_label }}" class="filter-label">Username</label>
+          {{ username_form.username }}
+          {% if username_form.username.errors %}
+            <p class="form-error">{{ username_form.username.errors|join:", " }}</p>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Save username</button>
+      </form>
     </section>
 
     <section class="profile-grid">

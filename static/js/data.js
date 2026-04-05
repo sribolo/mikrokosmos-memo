@@ -4042,7 +4042,7 @@ const CARDS = [
   {id: "PTDOS-ums-bts",
     era: "Permission To Dance On Stage - Live",
     version: "UMS POB ",
-    member: "Jungkook",
+    member: "BTS",
     image: "images/PTDOS-ums-bts.jpeg"
   },
   {id: "PTDOS-wvg-rm",

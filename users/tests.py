@@ -124,3 +124,19 @@ class MakeStaffCommandTests(TestCase):
         user.refresh_from_db()
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
+
+
+class ProfileUsernameUpdateTests(TestCase):
+    def test_authenticated_user_can_change_username(self):
+        user = get_user_model().objects.create_user(
+            username="oldname",
+            email="old@example.com",
+            password="strong-pass-123",
+        )
+        self.client.login(username="oldname", password="strong-pass-123")
+
+        response = self.client.post("/accounts/profile/", data={"username": "newname"}, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertEqual(user.username, "newname")
