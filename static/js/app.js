@@ -18,6 +18,50 @@ let canSyncStateToServer = true;
 let cardsCatalog = Array.isArray(CARDS) ? [...CARDS] : [];
 let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
 
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHTML(value).replace(/`/g, "&#96;");
+  }
+
+  function sanitizeUrl(value, { allowDataImage = false } = {}) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "";
+
+    if (allowDataImage && /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[a-z0-9+/=]+$/i.test(raw)) {
+      return raw;
+    }
+
+    if (raw.startsWith("/")) {
+      return raw;
+    }
+
+    try {
+      const parsed = new URL(raw, window.location.origin);
+      if (parsed.origin !== window.location.origin && !/^https?:$/i.test(parsed.protocol)) {
+        return "";
+      }
+      if (!/^https?:$/i.test(parsed.protocol)) {
+        return "";
+      }
+      return parsed.href;
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function safeText(value, fallback = "") {
+    const normalized = String(value ?? "").trim();
+    return escapeHTML(normalized || fallback);
+  }
+
   function staticAsset(path) {
     const base = window.STATIC_URL || "/static/";
     const normalized = String(path || "");
@@ -40,6 +84,7 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
   function applyProfilePhoto(photoDataUrl) {
     const profileIcons = document.querySelectorAll(".profile-icon");
     const bannerAvatar = document.getElementById("profileBannerAvatarImage");
+    const safePhotoUrl = sanitizeUrl(photoDataUrl, { allowDataImage: true });
 
     profileIcons.forEach((icon) => {
       if (!photoDataUrl) {
@@ -55,18 +100,27 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
         icon.dataset.fallback = icon.textContent.trim();
       }
       icon.classList.add("has-photo");
-      icon.innerHTML = `<img src="${photoDataUrl}" alt="Profile picture">`;
+      icon.replaceChildren();
+      if (!safePhotoUrl) {
+        icon.textContent = icon.dataset.fallback || "";
+        return;
+      }
+      const image = document.createElement("img");
+      image.src = safePhotoUrl;
+      image.alt = "Profile picture";
+      icon.appendChild(image);
     });
 
-    if (bannerAvatar && photoDataUrl) {
-      bannerAvatar.src = photoDataUrl;
+    if (bannerAvatar && safePhotoUrl) {
+      bannerAvatar.src = safePhotoUrl;
     }
   }
 
   function applyHeaderPhoto(photoDataUrl) {
     const headerImage = document.getElementById("profileHeaderImage");
-    if (headerImage && photoDataUrl) {
-      headerImage.src = photoDataUrl;
+    const safePhotoUrl = sanitizeUrl(photoDataUrl, { allowDataImage: true });
+    if (headerImage && safePhotoUrl) {
+      headerImage.src = safePhotoUrl;
     }
   }
 
@@ -480,10 +534,15 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
   function fillSelect(selectId, values, selectedValue) {
     const el = document.getElementById(selectId);
     if (!el) return;
-  
-    el.innerHTML = values
-      .map(value => `<option value="${value}">${value}</option>`)
-      .join("");
+
+    el.replaceChildren(
+      ...values.map((value) => {
+        const option = document.createElement("option");
+        option.value = String(value);
+        option.textContent = String(value);
+        return option;
+      })
+    );
     el.value = selectedValue;
   }
   
@@ -512,85 +571,119 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     if (action === "wishlist") toggleWishlist(id);
     if (action === "favorite") toggleFavorite(id);
   }
-  
-  function createCardHTML(card) {
+
+  function createEmptyState(title, description) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "empty-state";
+
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+
+    const body = document.createElement("p");
+    body.textContent = description;
+
+    wrapper.append(heading, body);
+    return wrapper;
+  }
+
+  function createBadge(label, className) {
+    const badge = document.createElement("span");
+    badge.className = `badge ${className}`;
+    badge.textContent = label;
+    return badge;
+  }
+
+  function createActionButton(label, className, action, id) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `mini-btn ${className}`.trim();
+    button.textContent = label;
+    button.addEventListener("click", (event) => toggleFromButton(event, action, id));
+    return button;
+  }
+
+  function createCardElement(card) {
     const owned = isOwned(card.id);
     const wishlisted = isWishlisted(card.id);
-    const favorite = isFavorite(card.id);
-  
+    const cardId = String(card.id ?? "");
+    const imageUrl = card.image ? sanitizeUrl(staticAsset(card.image)) : "";
+
     const currentPage = document.body.dataset.page;
     const isOwnedPage = currentPage === "owned";
     const isWishlistPage = currentPage === "wishlist";
-  
-    const visual = card.image
-      ? `<img src="${staticAsset(card.image)}" alt="${card.member} ${card.era}${card.version ? ` ${card.version}` : ""} photocard">`
-      : `
-        <div class="visual-fallback">
-          <div>
-            <span>${card.member.charAt(0)}</span>
-            <p class="card-subtext">${card.member}</p>
-          </div>
-        </div>
-      `;
-  
-    const versionLine =
-      card.version && card.era !== "All"
-        ? `<br>${card.version}`
-        : "";
-  
-    let actionsHTML = `
-      <div class="photocard-actions">
-        <button type="button" class="mini-btn ${owned ? "active-owned" : ""}" onclick="toggleFromButton(event, 'owned', '${card.id}')">
-          ${owned ? "Owned ✓" : "Owned"}
-        </button>
-        <button type="button" class="mini-btn ${wishlisted ? "active-wishlist" : ""}" onclick="toggleFromButton(event, 'wishlist', '${card.id}')">
-          ${wishlisted ? "Wishlisted ♥" : "Wishlist"}
-        </button>
-      </div>
-    `;
 
-    let visualClick = `onclick="applyCardClick('${card.id}')"`;
+    const article = document.createElement("article");
+    article.className = "photocard";
 
+    const visual = document.createElement("div");
+    visual.className = "photocard-visual";
+    if (!isOwnedPage && !isWishlistPage) {
+      visual.addEventListener("click", () => applyCardClick(cardId));
+    }
+
+    if (imageUrl) {
+      const image = document.createElement("img");
+      image.src = imageUrl;
+      image.alt = `${[card.member, card.era, card.version].filter(Boolean).join(" ")} photocard`;
+      visual.appendChild(image);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "visual-fallback";
+
+      const fallbackInner = document.createElement("div");
+      const initial = document.createElement("span");
+      initial.textContent = String(card.member ?? "").charAt(0);
+      const label = document.createElement("p");
+      label.className = "card-subtext";
+      label.textContent = String(card.member ?? "");
+
+      fallbackInner.append(initial, label);
+      fallback.appendChild(fallbackInner);
+      visual.appendChild(fallback);
+    }
+
+    const badgeWrap = document.createElement("div");
+    badgeWrap.className = "badge-wrap";
+    if (isSoloAlbum(card)) badgeWrap.appendChild(createBadge("Solo", "badge-solo"));
+    if (owned) badgeWrap.appendChild(createBadge("Owned", "badge-owned"));
+    if (wishlisted) badgeWrap.appendChild(createBadge("Wishlist", "badge-wishlist"));
+    visual.appendChild(badgeWrap);
+
+    const body = document.createElement("div");
+    body.className = "photocard-body";
+
+    const title = document.createElement("h4");
+    title.className = "photocard-title";
+    title.textContent = String(card.member ?? "");
+
+    const meta = document.createElement("p");
+    meta.className = "photocard-meta";
+    meta.append(document.createTextNode(String(card.era ?? "")));
+    if (card.version && card.era !== "All") {
+      meta.append(document.createElement("br"), document.createTextNode(String(card.version)));
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "photocard-actions";
     if (isOwnedPage) {
-      visualClick = "";
-      actionsHTML = `
-        <div class="photocard-actions">
-          <button type="button" class="mini-btn active-owned" onclick="toggleFromButton(event, 'owned', '${card.id}')">
-            Remove Owned
-          </button>
-        </div>
-      `;
+      actions.appendChild(createActionButton("Remove Owned", "active-owned", "owned", cardId));
+    } else if (isWishlistPage) {
+      actions.appendChild(createActionButton("Remove Wishlist", "active-wishlist", "wishlist", cardId));
+    } else {
+      actions.append(
+        createActionButton(owned ? "Owned ✓" : "Owned", owned ? "active-owned" : "", "owned", cardId),
+        createActionButton(
+          wishlisted ? "Wishlisted ♥" : "Wishlist",
+          wishlisted ? "active-wishlist" : "",
+          "wishlist",
+          cardId
+        )
+      );
     }
-  
-    if (isWishlistPage) {
-      visualClick = "";
-      actionsHTML = `
-        <div class="photocard-actions">
-          <button type="button" class="mini-btn active-wishlist" onclick="toggleFromButton(event, 'wishlist', '${card.id}')">
-            Remove Wishlist
-          </button>
-        </div>
-      `;
-    }
-  
-    return `
-      <article class="photocard">
-        <div class="photocard-visual" ${visualClick}>
-          ${visual}
-          <div class="badge-wrap">
-            ${isSoloAlbum(card) ? `<span class="badge badge-solo">Solo</span>` : ""}
-            ${owned ? `<span class="badge badge-owned">Owned</span>` : ""}
-            ${wishlisted ? `<span class="badge badge-wishlist">Wishlist</span>` : ""}
-          </div>
-        </div>
-  
-        <div class="photocard-body">
-          <h4 class="photocard-title">${card.member}</h4>
-          <p class="photocard-meta">${card.era}${versionLine}</p>
-          ${actionsHTML}
-        </div>
-      </article>
-    `;
+
+    body.append(title, meta, actions);
+    article.append(visual, body);
+    return article;
   }
 
   function getAlbumOrderIndex(era) {
@@ -660,33 +753,68 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     if (!featuredEl || !gridEl) return;
 
     if (!newsItemsCatalog.length) {
-      featuredEl.innerHTML = `
-        <span class="tag">Update</span>
-        <h4>No news yet</h4>
-        <p>Add news items in admin to populate this section.</p>
-      `;
-      gridEl.innerHTML = "";
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = "Update";
+      const heading = document.createElement("h4");
+      heading.textContent = "No news yet";
+      const body = document.createElement("p");
+      body.textContent = "Add news items in admin to populate this section.";
+      featuredEl.replaceChildren(tag, heading, body);
+      gridEl.replaceChildren();
       return;
     }
   
     const featured = newsItemsCatalog[newsIndex];
     const others = newsItemsCatalog.filter((_, index) => index !== newsIndex);
-  
-    featuredEl.innerHTML = `
-      <span class="tag">${featured.tag}</span>
-      <h4>${featured.title}</h4>
-      <p>${featured.text}</p>
-      <a href="${featured.link}" class="news-link">Read more</a>
-    `;
-  
-    gridEl.innerHTML = others.map(item => `
-      <article class="news-card">
-        <span class="tag">${item.tag}</span>
-        <h4>${item.title}</h4>
-        <p>${item.text}</p>
-        <a href="${item.link}" class="news-link">Open story</a>
-      </article>
-    `).join("");
+    const featuredLink = sanitizeUrl(featured.link);
+
+    const featuredTag = document.createElement("span");
+    featuredTag.className = "tag";
+    featuredTag.textContent = String(featured.tag || "Update");
+    const featuredTitle = document.createElement("h4");
+    featuredTitle.textContent = String(featured.title || "");
+    const featuredBody = document.createElement("p");
+    featuredBody.textContent = String(featured.text || "");
+    const featuredAnchor = document.createElement("a");
+    featuredAnchor.className = "news-link";
+    featuredAnchor.textContent = "Read more";
+    featuredAnchor.href = featuredLink || "#";
+    if (!featuredLink) {
+      featuredAnchor.setAttribute("aria-disabled", "true");
+      featuredAnchor.tabIndex = -1;
+    }
+    featuredEl.replaceChildren(featuredTag, featuredTitle, featuredBody, featuredAnchor);
+
+    gridEl.replaceChildren(
+      ...others.map((item) => {
+        const article = document.createElement("article");
+        article.className = "news-card";
+
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = String(item.tag || "Update");
+
+        const title = document.createElement("h4");
+        title.textContent = String(item.title || "");
+
+        const body = document.createElement("p");
+        body.textContent = String(item.text || "");
+
+        const link = document.createElement("a");
+        link.className = "news-link";
+        link.textContent = "Open story";
+        const safeLink = sanitizeUrl(item.link);
+        link.href = safeLink || "#";
+        if (!safeLink) {
+          link.setAttribute("aria-disabled", "true");
+          link.tabIndex = -1;
+        }
+
+        article.append(tag, title, body, link);
+        return article;
+      })
+    );
   
     const prevBtn = document.getElementById("prevNewsBtn");
     const nextBtn = document.getElementById("nextNewsBtn");
@@ -713,15 +841,12 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     const cards = sortCardsChronologically(
       cardsCatalog.filter(card => isOwned(card.id))
     );
-  
-    grid.innerHTML = cards.length
-      ? cards.map(createCardHTML).join("")
-      : `
-        <div class="empty-state">
-          <h3>No owned cards yet</h3>
-          <p>Mark cards as owned from the collection page.</p>
-        </div>
-      `;
+
+    grid.replaceChildren(
+      ...(cards.length
+        ? cards.map(createCardElement)
+        : [createEmptyState("No owned cards yet", "Mark cards as owned from the collection page.")])
+    );
 
   }
   
@@ -829,15 +954,12 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     if (!grid) return;
   
     const cards = sortCardsChronologically(filteredCards());
-  
-    grid.innerHTML = cards.length
-      ? cards.map(createCardHTML).join("")
-      : `
-        <div class="empty-state">
-          <h3>No cards found</h3>
-          <p>Try adjusting your search or filters.</p>
-        </div>
-      `;
+
+    grid.replaceChildren(
+      ...(cards.length
+        ? cards.map(createCardElement)
+        : [createEmptyState("No cards found", "Try adjusting your search or filters.")])
+    );
   
   }
   
@@ -848,15 +970,12 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     const cards = sortCardsChronologically(
       cardsCatalog.filter(card => isWishlisted(card.id))
     );
-  
-    grid.innerHTML = cards.length
-      ? cards.map(createCardHTML).join("")
-      : `
-        <div class="empty-state">
-          <h3>Your wishlist is empty</h3>
-          <p>Add cards from the collection page.</p>
-        </div>
-      `;
+
+    grid.replaceChildren(
+      ...(cards.length
+        ? cards.map(createCardElement)
+        : [createEmptyState("Your wishlist is empty", "Add cards from the collection page.")])
+    );
 
   }
   
@@ -865,21 +984,32 @@ let newsItemsCatalog = Array.isArray(NEWS_ITEMS) ? [...NEWS_ITEMS] : [];
     if (!memberStatsGrid) return;
   
     const membersOnly = MEMBERS.filter(member => member !== "All");
-  
-    memberStatsGrid.innerHTML = membersOnly.map(member => {
-      const memberCards = cardsCatalog.filter(card => card.member === member);
-      const owned = memberCards.filter(card => isOwned(card.id)).length;
-      const total = memberCards.length;
-      const pct = total ? Math.round((owned / total) * 100) : 0;
-  
-      return `
-        <div class="member-stat">
-          <h4>${member}</h4>
-          <p class="card-subtext">${owned}/${total} collected</p>
-          <p class="card-subtext">${pct}% complete</p>
-        </div>
-      `;
-    }).join("");
+
+    memberStatsGrid.replaceChildren(
+      ...membersOnly.map((member) => {
+        const memberCards = cardsCatalog.filter(card => card.member === member);
+        const owned = memberCards.filter(card => isOwned(card.id)).length;
+        const total = memberCards.length;
+        const pct = total ? Math.round((owned / total) * 100) : 0;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "member-stat";
+
+        const heading = document.createElement("h4");
+        heading.textContent = String(member);
+
+        const collected = document.createElement("p");
+        collected.className = "card-subtext";
+        collected.textContent = `${owned}/${total} collected`;
+
+        const percent = document.createElement("p");
+        percent.className = "card-subtext";
+        percent.textContent = `${pct}% complete`;
+
+        wrapper.append(heading, collected, percent);
+        return wrapper;
+      })
+    );
   }
   
   function exportData() {
