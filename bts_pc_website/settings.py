@@ -63,6 +63,10 @@ elif cloudinary_cloud_name and cloudinary_api_key and cloudinary_api_secret:
         secure=True,
     )
 
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
 
 # Application definition
 

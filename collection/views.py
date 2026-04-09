@@ -3,8 +3,9 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
-
+from django_ratelimit.decorators import ratelimit
 from .models import Card, CollectionState
+
 
 
 def home(request):
@@ -35,6 +36,7 @@ def _get_or_create_collection_state(request):
     return state
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET", "POST"])
 def collection_state_api(request):
     if not request.user.is_authenticated:
@@ -59,6 +61,7 @@ def collection_state_api(request):
     return JsonResponse({"ok": True})
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET"])
 def cards_api(request):
     cards = Card.objects.filter(is_active=True)
