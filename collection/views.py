@@ -28,6 +28,10 @@ def stats(request):
     return render(request, "stats.html")
 
 
+def credits(request):
+    return render(request, "credits.html")
+
+
 def _get_or_create_collection_state(request):
     state, _ = CollectionState.objects.get_or_create(
         user=request.user,

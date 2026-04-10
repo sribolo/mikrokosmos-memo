@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mikrokosmos Memo | Stats</title>
-  <meta name="description" content="Track your BTS photocards, build your wishlist, and hold onto the moments that made you stay.">
+  <title>Mikrokosmos Memo | Credits</title>
+  <meta name="description" content="Credits, image sources, and project details for Mikrokosmos Memo.">
   <meta property="og:title" content="Mikrokosmos Memo">
   <meta property="og:description" content="Track your BTS photocards across every era.">
   <meta property="og:image" content="{% static 'images/icon.png' %}">
@@ -20,11 +20,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
 </head>
-<body data-page="stats">
+<body data-page="credits">
   <header class="site-header">
     <div class="container header-inner">
-  
-      <!-- LEFT: LOGO -->
       <div class="brand">
         <div class="brand-mark">
           <img src="{% static 'images/icon.png' %}" alt="Logo">
@@ -34,19 +32,16 @@
           <p>For every era you never let go.</p>
         </div>
       </div>
-    
-      <!-- CENTER: NAV -->
+
       <nav class="top-nav">
         <a href="{% url 'home' %}">Home</a>
         <a href="{% url 'collection' %}">Collection</a>
         <a href="{% url 'owned' %}">Owned</a>
         <a href="{% url 'wishlist' %}">Wishlist</a>
-        <a href="{% url 'stats' %}" class="active">Stats</a>
+        <a href="{% url 'stats' %}">Stats</a>
       </nav>
-    
-      <!-- RIGHT: PROFILE + LIGHTSTICK -->
+
       <div class="nav-right">
-    
         {% if user.is_authenticated %}
           <a href="{% url 'profile' %}" class="profile-icon">
             {{ user.username|slice:":1"|upper }}
@@ -56,66 +51,83 @@
             👤
           </a>
         {% endif %}
-    
+
         <button id="themeToggle" class="icon-btn theme-toggle">
           <img id="themeToggleIcon"
                src="{% static 'images/lightstick_off.png' %}">
         </button>
-    
       </div>
-    
     </div>
   </header>
 
   <main class="container page">
     <section class="page-top card-surface">
       <div>
-        <h2>Stats</h2>
-        <p>Your collection progress overview.</p>
+        <h2>Credits</h2>
+        <p>Sources, acknowledgements, and project notes for Mikrokosmos Memo.</p>
       </div>
     </section>
 
-    <section class="stats-dashboard">
-      <div class="stat-card">
-        <span>Owned</span>
-        <strong id="ownedCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Wishlist</span>
-        <strong id="wishlistCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Missing</span>
-        <strong id="missingCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Total</span>
-        <strong id="totalCount">0</strong>
-      </div>
-    </section>
-
-    <section class="card-surface progress-panel">
-      <div class="section-heading compact">
-        <div>
-          <h3>Completion</h3>
-          <p id="progressText">0 of 0 cards collected</p>
+    <section class="credits-grid">
+      <article class="card-surface">
+        <div class="section-heading compact">
+          <div>
+            <h3>Photocard Image Sources</h3>
+            <p>Fan scan and archive accounts that helped inform this project.</p>
+          </div>
         </div>
-        <strong id="completionPct">0%</strong>
-      </div>
 
-      <div class="progress-bar">
-        <div id="progressFill"></div>
-      </div>
-    </section>
-
-    <section class="card-surface">
-      <div class="section-heading compact">
-        <div>
-          <h3>Collection by Member</h3>
-          <p>we are not seven, with you</p>
+        <div class="credits-list">
+          <div class="profile-badge">
+            <strong>b7kmskjin</strong>
+            <a href="https://www.pinterest.com/b7kmskjin/" target="_blank" rel="noopener" class="news-link">https://www.pinterest.com/b7kmskjin/</a>
+          </div>
+          <div class="profile-badge">
+            <strong>its_Nelda</strong>
+            <a href="https://www.pinterest.com/its_Nelda/" target="_blank" rel="noopener" class="news-link">https://www.pinterest.com/its_Nelda/</a>
+          </div>
+          <div class="profile-badge">
+            <strong>@912daze</strong>
+            <a href="https://x.com/912daze" target="_blank" rel="noopener" class="news-link">https://x.com/912daze</a>
+          </div>
+          <div class="profile-badge">
+            <strong>@seokiescans</strong>
+            <a href="https://x.com/seokiescans" target="_blank" rel="noopener" class="news-link">https://x.com/seokiescans</a>
+          </div>
         </div>
-      </div>
-      <div id="memberStatsGrid" class="member-stats-grid"></div>
+      </article>
+
+      <article class="card-surface">
+        <div class="section-heading compact">
+          <div>
+            <h3>Disclaimer</h3>
+            <p>Important context about the project and the media shown here.</p>
+          </div>
+        </div>
+
+        <div class="credits-stack">
+          <p>Mikrokosmos Memo is a fan-made project and is not affiliated with HYBE or BigHit Music.</p>
+          <p>All photocard images, scans, and related media belong to their respective owners.</p>
+          <p>If you are a rights holder and would like an image removed, please reach out and it will be taken down.</p>
+        </div>
+      </article>
+
+      <article class="card-surface">
+        <div class="section-heading compact">
+          <div>
+            <h3>Built with</h3>
+            <p>The tools and platforms behind the archive.</p>
+          </div>
+        </div>
+
+        <div class="credits-list">
+          <div class="profile-badge"><strong>Django</strong><p>Core web framework powering the app.</p></div>
+          <div class="profile-badge"><strong>PostgreSQL</strong><p>Data storage for collection records and app state.</p></div>
+          <div class="profile-badge"><strong>Cloudinary</strong><p>Media hosting for uploaded profile and header images.</p></div>
+          <div class="profile-badge"><strong>Render</strong><p>Hosting and deployment for Mikrokosmos Memo.</p></div>
+          <div class="profile-badge"><strong>Made with 💜 for ARMY</strong><p>A small fan-made home for collecting memories across every era.</p></div>
+        </div>
+      </article>
     </section>
   </main>
 
@@ -131,14 +143,13 @@
     <a href="{% url 'collection' %}">Collection</a>
     <a href="{% url 'owned' %}">Owned</a>
     <a href="{% url 'wishlist' %}">Wishlist</a>
-    <a href="{% url 'stats' %}" class="active">Stats</a>
+    <a href="{% url 'stats' %}">Stats</a>
   </nav>
-  
+
   <script>window.STATIC_URL = "{% static '' %}";</script>
   <script>window.CSRF_TOKEN = "{{ csrf_token }}";</script>
   <script src="{% static 'js/data.js' %}"></script>
   <script src="{% static 'js/theme.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
-  
 </body>
 </html>

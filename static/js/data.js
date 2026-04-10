@@ -361,7 +361,7 @@ const CARDS = [
     era: "Skool Luv Affair",
     version: "Version 2",
     member: "Jimin",
-    image: "images/sla-2-jimin.jpeg"
+    image: "images/sla-2-jimin.JPEG"
   },
   {id: "sla-2-v",
     era: "Skool Luv Affair",
@@ -1451,7 +1451,7 @@ const CARDS = [
     era: "Map Of The Soul: Persona",
     version: "Version 2",
     member: "Suga",
-    image: "images/motspersona-2-rm.jpeg"
+    image: "images/motspersona-2-suga.jpeg"
   },
   {id: "motspersona-2-jhope",
     era: "Map Of The Soul: Persona",
